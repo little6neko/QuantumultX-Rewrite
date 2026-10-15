@@ -1,0 +1,35 @@
+# 番茄小说去广告, version = 4.0 (2026-10-15)
+# 依据 APK v7.3.9.32 / versionCode 73932 解包分析重写; 旧版 v3.0 (2023-10) 所列域名
+# (pangolin-sdk-toutiao / pglstatp / pstatp / gurd.snssdk / fqnovelvod / adim.pinduoduo)
+# 已在现行版本中全部弃用, 详见仓库 rewrite-failure-analysis.md。
+#
+# ── 广告请求端点: 穿山甲 CSJ 新域名族, reject-dict 返回 {}, SDK 判定无填充 ──
+^https?:\/\/ads?[0-9a-z-]*\.zijieapi\.com\/ url reject-dict
+^https?:\/\/polaris\.zijieapi\.com\/luckycat\/ url reject-dict
+^https?:\/\/(verify|vcs)\.zijieapi\.com\/ url reject-dict
+
+# ── 广告素材图 CDN (勿整域拦 byteimg: 书籍封面/静态资源同在其中, 仅拦广告桶) ──
+^https?:\/\/.+\.byteimg\.com\/tos-cn-i-(1yzifmftcy|gnrt7m25cu)\/.+ url reject
+
+# ── 章末广告资源接口 (与正文 API 同域, 仅拦此路径; 空 JSON 隐藏章末卡) ──
+^https?:\/\/.+\.fqnovel\.com\/reading\/commerceapi\/chapter_end\/.+ url reject-dict
+
+# ── 广告监测 / 埋点 / 广告增长资源 ──
+^https?:\/\/mon\.zijieapi\.com\/monitor\/collect\/ url reject-dict
+^https?:\/\/clue\.oceanengine\.com\/ url reject
+^https?:\/\/(i|is|ib)\.snssdk\.com\/obj\/byte-gurd-source\/growth\/.+ url reject
+
+# ── 可选, 默认注释 ──
+# 激进: 阻断全部 Gecko 热更新下发, 可拦广告模板, 但可能影响功能页模板加载
+# ^https?:\/\/gecko[0-9a-z-]*\.zijieapi\.com\/ url reject-dict
+# 金币任务/裂变 H5 页 (阅读赚金币的任务页)
+# ^https?:\/\/(i|ib)\.snssdk\.com\/feoffline\/luckycat\/.+ url reject
+# 金币任务元数据接口 (api.fqnovel.com 与 i/ib.snssdk.com 的 /luckycat/novel/)
+# ^https?:\/\/(api[0-9a-z-]*\.fqnovel\.com|(i|ib)\.snssdk\.com)\/luckycat\/novel\/.+ url reject-dict
+
+# 注意: 应用为 TTNet/Cronet 栈, 支持 QUIC (UDP 443) 与 HttpDNS, QUIC 流量不经重写层。
+# 若配置后仍见广告, 在 QuantumultX [general] 段加入 (较新版本支持):
+#   udp_drop_list = *:443
+# 迫使 TTNet 回落 TCP 后本文件即可命中 (TTNet 检测到 QUIC 不可用会自动降级)。
+
+hostname = *.zijieapi.com,*.byteimg.com,*.snssdk.com,*.fqnovel.com,clue.oceanengine.com
