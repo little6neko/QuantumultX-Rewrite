@@ -1,35 +1,34 @@
-# 番茄小说去广告, version = 4.0 (2026-10-15)
-# 依据 APK v7.3.9.32 / versionCode 73932 解包分析重写; 旧版 v3.0 (2023-10) 所列域名
-# (pangolin-sdk-toutiao / pglstatp / pstatp / gurd.snssdk / fqnovelvod / adim.pinduoduo)
-# 已在现行版本中全部弃用, 详见仓库 rewrite-failure-analysis.md。
-#
-# ── 广告请求端点: 穿山甲 CSJ 新域名族, reject-dict 返回 {}, SDK 判定无填充 ──
+# 番茄小说去广告, version = 4.1 (2026-10-15)
+# v4.0 回归教训: QX 的 hostname 列表即 MITM 解密名单。v4.0 将 *.fqnovel.com /
+# *.snssdk.com / *.byteimg.com 纳入 hostname, 正文/设置/封面请求被解密后与
+# TTNet/okhttp 证书校验 (CertificatePinner / btm) 冲突, 导致小说加载失败。
+# v4.1 将 hostname 收窄至纯广告/监测域, 功能域一律不进 MITM;
+# 依赖功能域 MITM 的拦截项全部降级为可选注释。
+
+# ── 广告请求端点: 穿山甲 CSJ 域族 (含区域变体), reject-dict 返回 {}, SDK 判定无填充 ──
 ^https?:\/\/ads?[0-9a-z-]*\.zijieapi\.com\/ url reject-dict
 ^https?:\/\/polaris\.zijieapi\.com\/luckycat\/ url reject-dict
 ^https?:\/\/(verify|vcs)\.zijieapi\.com\/ url reject-dict
-
-# ── 广告素材图 CDN (勿整域拦 byteimg: 书籍封面/静态资源同在其中, 仅拦广告桶) ──
-^https?:\/\/.+\.byteimg\.com\/tos-cn-i-(1yzifmftcy|gnrt7m25cu)\/.+ url reject
-
-# ── 章末广告资源接口 (与正文 API 同域, 仅拦此路径; 空 JSON 隐藏章末卡) ──
-^https?:\/\/.+\.fqnovel\.com\/reading\/commerceapi\/chapter_end\/.+ url reject-dict
-
-# ── 广告监测 / 埋点 / 广告增长资源 ──
 ^https?:\/\/mon\.zijieapi\.com\/monitor\/collect\/ url reject-dict
 ^https?:\/\/clue\.oceanengine\.com\/ url reject
-^https?:\/\/(i|is|ib)\.snssdk\.com\/obj\/byte-gurd-source\/growth\/.+ url reject
 
-# ── 可选, 默认注释 ──
-# 激进: 阻断全部 Gecko 热更新下发, 可拦广告模板, 但可能影响功能页模板加载
-# ^https?:\/\/gecko[0-9a-z-]*\.zijieapi\.com\/ url reject-dict
-# 金币任务/裂变 H5 页 (阅读赚金币的任务页)
+# ── 可选 (默认注释): 以下各项需将对应功能域加入 hostname (即 MITM 该域),
+#    可能与证书校验冲突导致加载失败, v4.0 正是这样误伤阅读的, 请自行权衡 ──
+# 章末广告卡数据 (需 hostname 加 *.fqnovel.com, 正文 API 同域):
+# ^https?:\/\/.+\.fqnovel\.com\/reading\/commerceapi\/chapter_end\/.+ url reject-dict
+# 广告素材图桶 (需 hostname 加 *.byteimg.com, 书籍封面同域):
+# ^https?:\/\/.+\.byteimg\.com\/tos-cn-i-(1yzifmftcy|gnrt7m25cu)\/.+ url reject
+# 广告增长资源 (需 hostname 加 *.snssdk.com, 设置/阅读 H5 同域):
+# ^https?:\/\/(i|is|ib)\.snssdk\.com\/obj\/byte-gurd-source\/growth\/.+ url reject
+# 金币任务页 (需 hostname 加 *.snssdk.com):
 # ^https?:\/\/(i|ib)\.snssdk\.com\/feoffline\/luckycat\/.+ url reject
-# 金币任务元数据接口 (api.fqnovel.com 与 i/ib.snssdk.com 的 /luckycat/novel/)
+# 金币任务元数据 (需 hostname 加 *.fqnovel.com 与 i/ib.snssdk.com):
 # ^https?:\/\/(api[0-9a-z-]*\.fqnovel\.com|(i|ib)\.snssdk\.com)\/luckycat\/novel\/.+ url reject-dict
+# Gecko 广告模板下发 (需 hostname 改为 *.zijieapi.com 通配, tnc/热更新同域):
+# ^https?:\/\/gecko[0-9a-z-]*\.zijieapi\.com\/ url reject-dict
 
 # 注意: 应用为 TTNet/Cronet 栈, 支持 QUIC (UDP 443) 与 HttpDNS, QUIC 流量不经重写层。
-# 若配置后仍见广告, 在 QuantumultX [general] 段加入 (较新版本支持):
-#   udp_drop_list = *:443
-# 迫使 TTNet 回落 TCP 后本文件即可命中 (TTNet 检测到 QUIC 不可用会自动降级)。
+# 若拦截不彻底, 可在 QuantumultX [general] 段尝试 udp_drop_list = *:443 迫使回落 TCP
+# (全局生效, 会影响其他应用的 HTTP/3, 请自行权衡)。
 
-hostname = *.zijieapi.com,*.byteimg.com,*.snssdk.com,*.fqnovel.com,clue.oceanengine.com
+hostname = ad.zijieapi.com,ads.zijieapi.com,ads3-normal.zijieapi.com,ads3-normal-hl.zijieapi.com,ads3-normal-lf.zijieapi.com,ads3-normal-lq.zijieapi.com,ads5-normal.zijieapi.com,ads5-normal-hl.zijieapi.com,ads5-normal-lf.zijieapi.com,ads5-normal-lq.zijieapi.com,polaris.zijieapi.com,verify.zijieapi.com,vcs.zijieapi.com,mon.zijieapi.com,clue.oceanengine.com
