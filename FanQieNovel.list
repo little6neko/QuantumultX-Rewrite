@@ -1,0 +1,59 @@
+# 番茄小说去广告分流, version = 2.0 (2026-10-22)
+# 校准依据: APK 7.4.1.32 (versionCode 74132) dex 解包取证 (本仓库 src/analysis)。
+# 取代 zqzess 2022-12 版 list: 17 条死域/5 个死 IP 已清, 误伤域降级为注释,
+# 补齐 HttpDNS 与 tnc 硬编码 IP 兜底。
+#
+# !! 重要: 应用为 TTNet/Cronet 栈, 广告请求可走 QUIC (UDP 443), UDP 流量不经过
+# !! 分流/重写的 HTTP 处理, 本清单对 QUIC 无效。请在 QuantumultX 配置 [general] 段加:
+# !!   udp_drop_list = *:443
+# !! 迫使 TTNet 回落 TCP (自动降级), 本清单与 rewrite 规则才能命中。
+# !! 若已缓存广告素材仍回放, 清除番茄小说应用数据一次即可 (t_ad_download 离线缓存表)。
+
+# ── 广告请求端点 (穿山甲 CSJ 域族, 含区域变体) ──
+host, ad.zijieapi.com, reject
+host, ads.zijieapi.com, reject
+host, ads3-normal.zijieapi.com, reject
+host, ads3-normal-hl.zijieapi.com, reject
+host, ads3-normal-lf.zijieapi.com, reject
+host, ads3-normal-lq.zijieapi.com, reject
+host, ads5-normal.zijieapi.com, reject
+host, ads5-normal-hl.zijieapi.com, reject
+host, ads5-normal-lf.zijieapi.com, reject
+host, ads5-normal-lq.zijieapi.com, reject
+host, polaris.zijieapi.com, reject
+host, verify.zijieapi.com, reject
+host, vcs.zijieapi.com, reject
+host, clue.oceanengine.com, reject
+host, activity-ag.awemeughun.com, reject
+
+# ── 遥测/埋点 (无功能影响) ──
+host, mon.zijieapi.com, reject
+host, mon.snssdk.com, reject
+host, log.snssdk.com, reject
+host, applog.zijieapi.com, reject
+host, log.zijieapi.com, reject
+host, rtlog.zijieapi.com, reject
+
+# ── HttpDNS 解析端点 (挡掉迫使回落系统 DNS, 代理层可见) ──
+host, dig.bdurl.net, reject
+host, dig.zjurl.cn, reject
+# HttpDNS/tnc 硬编码兜底 IP (dex 直写, host 规则对直连 IP 失明, 必须 ip-cidr)
+ip-cidr, 101.36.166.16/32, reject
+ip-cidr, 101.36.166.17/32, reject
+ip-cidr, 101.36.166.18/32, reject
+ip-cidr, 101.36.166.19/32, reject
+
+# ── 激进档 (默认注释; 有功能代价, 自行取舍) ──
+# 设置中枢 (settings/v3 远程开关, 拦了广告配置拉不到, 但登录/免流同在此域):
+# host, is.snssdk.com, reject
+# host, ib.snssdk.com, reject
+# i.snssdk.com 兜底 IP:
+# ip-cidr, 122.14.229.109/32, reject
+# ip-cidr, 122.14.229.110/32, reject
+# 整域连坐 (feedback-c 用户反馈 / security 上报 / gecko 模板 / tnc 设置将一并失效):
+# host-suffix, zijieapi.com, reject
+# 验证码与人机验证将不可用 (rmc.bytedance.com):
+# host-suffix, bytedance.com, reject
+# 广告模板热更新下发 (福利页资源同域, 拦后部分页面白屏):
+# host, gecko.zijieapi.com, reject
+# host, lf-sourcecdn-tos.bytegecko.com, reject
